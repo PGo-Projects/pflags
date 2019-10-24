@@ -1,0 +1,24 @@
+[[feature_one]]
+
+[array_one]
+"testing"
+"testing1"
+1
+2
+3
+
+{dictionary_one}
+testing = "hello"
+testing3 = "bye"
+testing2 = 2
+
+[[feature_two]].default
+
+[array_two]
+"testing"
+2
+3
+
+{dictionary_two}
+testing = "2"
+die = 3
