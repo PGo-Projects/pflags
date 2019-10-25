@@ -6,6 +6,7 @@ import (
 )
 
 func TestParseFeatureOne(t *testing.T) {
+	DebugMode = true
 	cfg, err := Parse("test.pflags", "feature_one")
 	if err != nil {
 		t.Error(err)
@@ -14,6 +15,7 @@ func TestParseFeatureOne(t *testing.T) {
 }
 
 func TestParseFeatureTwo(t *testing.T) {
+	DebugMode = true
 	cfg, err := Parse("test.pflags", "feature_two")
 	if err != nil {
 		t.Error(err)
@@ -22,6 +24,7 @@ func TestParseFeatureTwo(t *testing.T) {
 }
 
 func TestParseFeatureOneAndTwo(t *testing.T) {
+	DebugMode = true
 	cfg, err := Parse("test.pflags", "feature_one", "feature_two")
 	if err != nil {
 		t.Error(err)
