@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/PGo-Projects/output"
+	"github.com/PGo-Projects/pflags/internal/config"
 )
 
 var (
@@ -33,13 +34,6 @@ var (
 	}
 )
 
-type Config struct {
-	arrays           map[string][]interface{}
-	hashMaps         map[string]map[string]interface{}
-	DefaultFeature   string
-	multipleFeatures bool
-}
-
 type header struct {
 	kind    string
 	name    string
@@ -47,19 +41,14 @@ type header struct {
 	lineNum int
 }
 
-func Parse(filename string, features ...string) (*Config, error) {
+func Parse(filename string, features ...string) (*config.Config, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
-	cfg := &Config{
-		arrays:           make(map[string][]interface{}),
-		hashMaps:         make(map[string]map[string]interface{}),
-		DefaultFeature:   "",
-		multipleFeatures: len(features) > 1,
-	}
+	cfg := config.New(len(features) > 1)
 	scanner := NewScanner(file)
 	err = parseFeatures(features, scanner, cfg)
 	if err != nil {
@@ -69,7 +58,7 @@ func Parse(filename string, features ...string) (*Config, error) {
 	return cfg, err
 }
 
-func parseFeatures(features []string, scanner *scanner, cfg *Config) error {
+func parseFeatures(features []string, scanner *scanner, cfg *config.Config) error {
 	var reachedEOF bool
 	var err error
 
@@ -89,10 +78,8 @@ func parseFeatures(features []string, scanner *scanner, cfg *Config) error {
 				for parsingFeature {
 					switch heading.kind {
 					case array:
-						cfg.arrays[heading.name] = make([]interface{}, 0)
 						heading, reachedEOF, err = parseArray(scanner, cfg, heading.name)
 					case hashmap:
-						cfg.hashMaps[heading.name] = make(map[string]interface{})
 						heading, reachedEOF, err = parseHashmap(scanner, cfg, heading.name)
 					case feature:
 						if contains(features, heading.name) {
@@ -116,7 +103,7 @@ func parseFeatures(features []string, scanner *scanner, cfg *Config) error {
 	return nil
 }
 
-func parseArray(scanner *scanner, cfg *Config, name string) (*header, bool, error) {
+func parseArray(scanner *scanner, cfg *config.Config, name string) (*header, bool, error) {
 	for scanner.Scan() {
 		line, lineNum := scanner.Text()
 		line = strings.TrimSpace(line)
@@ -129,13 +116,13 @@ func parseArray(scanner *scanner, cfg *Config, name string) (*header, bool, erro
 			if len(elems) > 1 || !validValue(elems[0]) {
 				return nil, false, fmt.Errorf("%s on line %d is not a valid value", line, lineNum)
 			}
-			cfg.arrays[name] = append(cfg.arrays[name], elems[0])
+			cfg.Array.Add(name, elems[0])
 		}
 	}
 	return nil, true, nil
 }
 
-func parseHashmap(scanner *scanner, cfg *Config, name string) (*header, bool, error) {
+func parseHashmap(scanner *scanner, cfg *config.Config, name string) (*header, bool, error) {
 	for scanner.Scan() {
 		line, lineNum := scanner.Text()
 		line = strings.TrimSpace(line)
@@ -155,7 +142,7 @@ func parseHashmap(scanner *scanner, cfg *Config, name string) (*header, bool, er
 			if !validValue(elems[2]) {
 				return nil, false, fmt.Errorf("%s on line %d is not a valid value", elems[2], lineNum)
 			}
-			cfg.hashMaps[name][elems[0]] = elems[2]
+			cfg.HashMap.Add(name, elems[0], elems[2])
 		}
 	}
 	return nil, true, nil
@@ -177,7 +164,7 @@ func parseForHeader(line string, lineNum int) (*header, bool) {
 	return nil, false
 }
 
-func parseFeatureHeader(cfg *Config, heading *header) {
+func parseFeatureHeader(cfg *config.Config, heading *header) {
 	if len(heading.info) > 1 && heading.info[0] == ".default" {
 		cfg.DefaultFeature = heading.name
 	}
