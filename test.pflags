@@ -6,11 +6,14 @@
 1
 2
 3
+true
+0.0
 
 {dictionary_one}
 testing = "hello"
 testing3 = "bye"
 testing2 = 2
+testing4 = 0.0
 
 [[feature_two]].default
 

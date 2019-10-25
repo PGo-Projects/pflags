@@ -26,11 +26,11 @@ var (
 	}
 
 	valuePatterns = []*regexp.Regexp{
-		regexp.MustCompile(`-?\d+`),                    // int64
-		regexp.MustCompile(`-?(0|([1-9]\d*))?\.\d+`),   // float
-		regexp.MustCompile(`"[^"\\]*(?:\\.[^"\\]*)*"`), // string
-		regexp.MustCompile(`'[^']?'`),                  // char
-		regexp.MustCompile(`(false)|true`),             // bool
+		regexp.MustCompile(`(-?\d+)`),                    // int64
+		regexp.MustCompile(`(-?(0|([1-9]\d*))?\.\d+)`),   // float
+		regexp.MustCompile(`"([^"\\]*(?:\\.[^"\\]*)*)"`), // string
+		regexp.MustCompile(`'([^']?)'`),                  // char
+		regexp.MustCompile(`((false)|(true))`),           // bool
 	}
 )
 
@@ -113,10 +113,11 @@ func parseArray(scanner *scanner, cfg *config.Config, name string) (*header, boo
 			}
 
 			elems := strings.Split(line, " ")
-			if len(elems) > 1 || !validValue(elems[0]) {
+			value, ok := getValue(elems[0])
+			if len(elems) > 1 || !ok {
 				return nil, false, fmt.Errorf("%s on line %d is not a valid value", line, lineNum)
 			}
-			cfg.Array.Add(name, elems[0])
+			cfg.Array.Add(name, value)
 		}
 	}
 	return nil, true, nil
@@ -139,10 +140,12 @@ func parseHashmap(scanner *scanner, cfg *config.Config, name string) (*header, b
 			if elems[1] != "=" {
 				return nil, false, fmt.Errorf("%s on line %d is not a valid delimiter", elems[1], lineNum)
 			}
-			if !validValue(elems[2]) {
+
+			value, ok := getValue(elems[2])
+			if !ok {
 				return nil, false, fmt.Errorf("%s on line %d is not a valid value", elems[2], lineNum)
 			}
-			cfg.HashMap.Add(name, elems[0], elems[2])
+			cfg.HashMap.Add(name, elems[0], value)
 		}
 	}
 	return nil, true, nil
@@ -175,13 +178,14 @@ func parseFeatureHeader(cfg *config.Config, heading *header) {
 	)
 }
 
-func validValue(s string) bool {
+func getValue(s string) (string, bool) {
 	for _, pattern := range valuePatterns {
-		if pattern.FindString(s) == s {
-			return true
+		matches := pattern.FindStringSubmatch(s)
+		if len(matches) > 0 && matches[0] == s {
+			return matches[1], true
 		}
 	}
-	return false
+	return "", false
 }
 
 func contains(array []string, s string) bool {
