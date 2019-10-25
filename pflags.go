@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	DebugMode = true
+	DebugMode = false
 
 	feature = "feature"
 	array   = "array"
