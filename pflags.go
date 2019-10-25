@@ -29,6 +29,7 @@ var (
 		regexp.MustCompile(`-?(0|([1-9]\d*))?\.\d+`),   // float
 		regexp.MustCompile(`"[^"\\]*(?:\\.[^"\\]*)*"`), // string
 		regexp.MustCompile(`'[^']?'`),                  // char
+		regexp.MustCompile(`(false)|true`),             // bool
 	}
 )
 
