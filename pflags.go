@@ -11,8 +11,6 @@ import (
 )
 
 var (
-	DebugMode = false
-
 	feature = "feature"
 	array   = "array"
 	hashmap = "hashmap"
@@ -41,6 +39,10 @@ type header struct {
 	lineNum int
 }
 
+func SetDebug(debugMode bool) {
+	output.DEBUG = debugMode
+}
+
 func Parse(filename string, features ...string) (*config.Config, error) {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -52,7 +54,7 @@ func Parse(filename string, features ...string) (*config.Config, error) {
 	scanner := NewScanner(file)
 	err = parseFeatures(features, scanner, cfg)
 	if err != nil {
-		output.DebugErrorln(DebugMode, err)
+		output.DebugErrorln(err)
 	}
 
 	return cfg, err
@@ -172,7 +174,6 @@ func parseFeatureHeader(cfg *config.Config, heading *header) {
 		cfg.DefaultFeature = heading.name
 	}
 	output.DebugStringln(
-		DebugMode,
 		fmt.Sprintf("Parsing feature %s on line %d\n", heading.name, heading.lineNum),
 		output.BLUE,
 	)
